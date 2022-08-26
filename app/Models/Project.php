@@ -21,4 +21,18 @@ class Project extends Model
         'website',
         'description',
     ];
+
+    protected $casts = [
+        'date' => 'date'
+    ];
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
+    public function client()
+    {
+        return $this->belongsTo(Client::class);
+    }
 }
