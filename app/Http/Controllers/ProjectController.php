@@ -79,9 +79,14 @@ class ProjectController extends Controller
     }
 
 
-    public function show(Project $project)
+    public function show(Project $project, $id)
     {
-        //
+        $project = Project::where('id', $id)
+                ->with('category', 'client')
+                ->first();
+        return response()->json([
+            'project' => $project
+        ], 200);
     }
 
     public function edit(Project $project)
@@ -91,11 +96,68 @@ class ProjectController extends Controller
 
     public function update(Request $request, Project $project)
     {
-        //
+        $project = Project::find($request->id);
+
+        $mainImageOne = $project->imageOne;
+        $mainImageTwo = $project->imageTwo;
+
+        $project->title = $request->title;
+        $project->category_id = $request->category_id;
+        $project->client_id = $request->client_id;
+        $project->website = $request->website;
+        $project->github = $request->github;
+        $project->date = $request->date;
+        $project->description = $request->description;
+
+        $imageOnePath = public_path('/uploads/images/projects/').$mainImageOne;
+        if (file_exists($imageOnePath)) {
+            unlink($imageOnePath);
+        }
+
+        $imageTwoPath = public_path('/uploads/images/projects/').$mainImageTwo;
+        if (file_exists($imageTwoPath)) {
+            unlink($imageTwoPath);
+        }
+
+        if ($request->imageOne != $project->imageOne) {
+            $fileOne = explode(';', $request->imageOne);
+            $fileOne = explode('/', $fileOne[0]);
+            $file_one_ex = end($fileOne);
+            $file_one_name = \Str::random(10) . '.' . $file_one_ex;
+            $project->imageOne = $file_one_name;
+            Image::make($request->imageOne)->save(public_path('/uploads/images/projects/').$file_one_name);
+        }
+
+        if ($request->imageTwo != $project->imageTwo) {
+            $fileTwo = explode(';', $request->imageTwo);
+            $fileTwo = explode('/', $fileTwo[0]);
+            $file_two_ex = end($fileTwo);
+            $file_two_name = \Str::random(10) . '.' . $file_two_ex;
+            $project->imageTwo = $file_two_name;
+            Image::make($request->imageTwo)->save(public_path('/uploads/images/projects/').$file_two_name);
+        }
+
+        $project->save();
+
+        return response()->json('success', 200);
     }
 
-    public function destroy(Project $project)
+    public function destroy(Project $project, $id)
     {
-        //
+        $project = Project::find($id);
+
+        $imageOne = $project->imageOne;
+        $imageTwo = $project->imageTwo;
+
+        $imageOnePath = public_path('/uploads/images/projects/').$imageOne;
+        $imageTwoPath = public_path('/uploads/images/projects/').$imageTwo;
+
+        if (file_exists($imageOnePath)) {
+            unlink($imageOnePath);
+        }elseif(file_exists($imageTwoPath)){
+            unlink($imageTwoPath);
+        }
+
+        $project->delete();
     }
 }
